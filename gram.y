@@ -2,6 +2,7 @@
   int yylex(void);
   void yyerror(const char *,...);
   void printMain();
+  char* addIndentation(char *dest, unsigned int i);
   int yyparse(void);
   extern int yylineno;
 #include <stdio.h>
@@ -1116,6 +1117,7 @@ FunctionDefinition
   : {yyerror("syntax error");} Declarator FunctionBody
   | DeclarationSpecifiers Declarator FunctionBody
 {if (strcmp("main()", $<text>2) == 0) printMain();
+ $<text>3 = addIndentation($<text>3, 1);
  printf("%s", $<text>3);
 } 
   ;
@@ -1152,6 +1154,17 @@ void yyerror(const char *fmt, ...)
 void printMain(const char* fBody)
 {
   printf("public static void main(String[] args)\n");	
+}
+
+char* addIndentation(char *dest, unsigned int i){
+    char* indentation = malloc(i + 1 + strlen(dest));
+    strcpy(indentation, "\t");
+    for(int x = 1; x < i; x++){
+        strcat(indentation, "\t");
+    }
+   strcat(indentation, dest);
+   free(dest);
+   return indentation;
 }
 
 int main() { return yyparse(); }

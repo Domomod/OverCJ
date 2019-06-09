@@ -1,10 +1,13 @@
 /* #autor: John Doe     
    #version: 0.0001 */ 
 #include <stdio.h> 
-int func1 (int range) 
+#include 
+
+"Source/myLiv.h" 
+int func1 (int i) 
 {     
 	int j = 0;     
-	for (; j < range; j++)     
+	for (; j < i; j++)     
 	{         
 		puts ("Repeat me");     
 	}     
@@ -35,5 +38,5 @@ int main ()
 		class ();     
 	}     
 	func1 (10);     
-	func2 (10, 5, "Repeat me"); 
+	func2 (10, 5, MESSAGE); 
 	}

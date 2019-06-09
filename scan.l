@@ -3,9 +3,17 @@
   int yywrap(void);
   int yylex(void);
   #include "y.tab.h"
+  typedef struct DefinePairStruct{
+  	char* key;
+	char* val;
+  } DefinePair;
+  DefinePair* defineRules;
 %}
 %s Javadoc
 %s Code
+%s Define
+%s Include1
+%s Include2
 %s Comment
 %s Comment2
 %%
@@ -15,12 +23,26 @@
 					       strcpy(yylval.text, "/* ");
 					       strcat(yylval.text, yytext);
                                                return JAVA_DOC; /* typedef -> check type */ }
+
+<Code>#include[ \t\v\n\f]*\"		     { BEGIN Include1; }
+<Include1>\" 				     { BEGIN Code; }
+<Include1>.|\n 				     { ; }
+
+<Code>#include[ \t\v\n\f]*<		     	     { BEGIN Include2; }
+<Include2>> 				     { BEGIN Code; }
+<Include2>.|\n 				     { ; }
+
+
+
+
 <Code>"//"                                   { BEGIN Comment2; }
 <Comment2>\n				     { BEGIN Code; }
 <Comment2>.|\n 				     { ; }
+
 <Code>"/*"                                   { BEGIN Comment; }
 <Comment>"*/"                                { BEGIN Code; }
 <Comment>.|\n                                { ; }
+
 <Code>auto                                   { return KWD_auto; }
 <Code>break                                  { return KWD_break; }
 <Code>case                                   { return KWD_case; }
@@ -172,13 +194,22 @@
                                                   return CONST_CHAR;
                                                 }
 <Code>[a-zA-Z_][a-zA-Z_0-9]*                 {
-                                                  yylval.text = malloc(strlen(yytext + 2));
-						  strcpy(yylval.text, "$");
-						  strcat(yylval.text, yytext);
-                                                  return IDENT; /* typedef -> check type */
+						  if (strcmp(yytext, "func2") == 0 )
+                                                  {
+							yylval.text = malloc(20);
+							strcpy(yylval.text,"$honk2");
+							return CONST_DEF_VAL;
+						  }
+						  else
+						  {
+							yylval.text = malloc(strlen(yytext + 2));
+							strcpy(yylval.text, "$");
+							strcat(yylval.text, yytext);
+		                                        return IDENT; /* typedef -> check type */
+						  }
                                                 }
+
 <Code>[ \t\v\n\f]                            { ; }
-<Code>[ \t\v\n\f]*#include[ \t\v\n\f]*<[a-zA-Z_.0-9]+> { ; }
 <Code>\\[^\n]*\n				{ ; }
 %%
 int yywrap(void) { return 1; }

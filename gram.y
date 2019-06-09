@@ -30,7 +30,7 @@
 
 %token CONST_INT CONST_LONG_INT CONST_UNSIGNED CONST_UNSIGNED_LONG_INT CONST_DOUBLE CONST_FLOAT CONST_LONG_DOUBLE CONST_STRING CONST_CHAR
 
-%token IDENT TYPE_NAME JAVA_DOC
+%token IDENT TYPE_NAME CONST_DEF_VAL JAVA_DOC
 %%
 Wrapper
   : JAVA_DOC {printf("%s\npublic class DefaultClass\n{\n", $<text>1);} Input {printf("}\n");};
@@ -42,11 +42,20 @@ Input
   ;
 
 
-PrimaryExpr
+IdentOrDefVal
   : IDENT		
-{$<text>$ = malloc(strlen($<text>1) + 2);
+{
+ $<text>$ = malloc(strlen($<text>1) + 2);
  strcpy($<text>$,$<text>1);
  free($<text>1);
+}
+  | CONST_DEF_VAL
+{$<text>$ = $<text>1;
+}
+
+PrimaryExpr
+  : IdentOrDefVal
+{$<text>$ = $<text>1;
 }
   | Constant		
 {$<text>$ = $<text>1;
@@ -97,14 +106,14 @@ strcat($<text>$,$<text>3);
 strcat($<text>$,")"); 	 		  
 free($<text>1); free($<text>3);
 }
-  | PostfixExpr '.' IDENT 
+  | PostfixExpr '.' IdentOrDefVal 
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 2);
 strcpy($<text>$,$<text>1);
 strcat($<text>$,".");
 strcat($<text>$,$<text>3);
 free($<text>1); free($<text>3);
 }
-  | PostfixExpr OP_PTR IDENT
+  | PostfixExpr OP_PTR IdentOrDefVal
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);
  strcpy($<text>$, $<text>1);
  strcat($<text>$, "->");
@@ -559,7 +568,7 @@ TypeSpecifier
 
 
 StructOrUnionSpecifier
-  : StructOrUnion IDENT '{' StructDeclarationList '}'
+  : StructOrUnion IdentOrDefVal '{' StructDeclarationList '}'
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + strlen($<text>4) + 7);			 
  strcpy($<text>$, $<text>1);		 
  strcat($<text>$, $<text>2);
@@ -576,7 +585,7 @@ StructOrUnionSpecifier
  strcat($<text>$, "}\n");
  free($<text>1);  free($<text>3);
 }
-  | StructOrUnion IDENT
+  | StructOrUnion IdentOrDefVal
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
  strcat($<text>$, " ");
@@ -660,7 +669,7 @@ EnumSpecifier
  strcat($<text>$, "}\n");
  free($<text>3);
 }
-  | KWD_enum IDENT '{' EnumeratorList '}'
+  | KWD_enum IdentOrDefVal '{' EnumeratorList '}'
 {$<text>$ = malloc(sizeof($<text>2) + sizeof($<text>4) + 20);			 
  strcpy($<text>$, "enum ");		 
  strcat($<text>$, $<text>2);
@@ -669,7 +678,7 @@ EnumSpecifier
  strcat($<text>$, "}\n");
  free($<text>2); free($<text>4);
 }
-  | KWD_enum IDENT
+  | KWD_enum IdentOrDefVal
 {$<text>$ = malloc(sizeof($<text>2) + 6);			 
  strcpy($<text>$, "enum ");		 
  strcat($<text>$, $<text>2);
@@ -693,10 +702,10 @@ EnumeratorList
 
 
 Enumerator
-  : IDENT
+  : IdentOrDefVal
 {$<text>$ = $<text>1;
 }
-  | IDENT '=' ConstantExpr
+  | IdentOrDefVal '=' ConstantExpr
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 4);	     
  strcpy($<text>$, $<text>1);	     
  strcat($<text>$, " = ");	     
@@ -732,7 +741,7 @@ Declarator
 
 
 Declarator2
-  : IDENT 
+  : IdentOrDefVal 
 {$<text>$ = $<text>1;
 }
   | '(' Declarator ')'
@@ -851,10 +860,10 @@ ParameterIdentifierList
 }
   ;
 IdentifierList
-  : IDENT
+  : IdentOrDefVal
 {$<text>$ = $<text>1;
 }
-  | IdentifierList ',' IDENT
+  | IdentifierList ',' IdentOrDefVal
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);	     
  strcpy($<text>$, $<text>1);	     
  strcat($<text>$, ", ");	     
@@ -1045,7 +1054,7 @@ Statement
 
 
 LabeledStatement
-  : IDENT ':' Statement
+  : IdentOrDefVal ':' Statement
   | KWD_case ConstantExpr ':' Statement
   | KWD_default ':' Statement
   ;
@@ -1178,7 +1187,7 @@ IterationStatement
 }
   ;
 JumpStatement
-  : KWD_goto IDENT ';'
+  : KWD_goto IdentOrDefVal ';'
 {yyerror("Java does not use goto statement. ");
 }
   | KWD_continue ';'

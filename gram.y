@@ -757,16 +757,19 @@ Declarator2
  free($<text>1); free($<text>3);
 }
   | Declarator2 '(' ')' 
-{$<text>$ = malloc(sizeof($<text>1) + 150);
+{
  if (strcmp("$main", $<text>1) == 0)
- {	free($<text>0);
+ {	
+	$<text>$ = malloc(strlen($<text>1) + 150);
+	free($<text>0);
 	$<text>0 = malloc(15);
 	strcpy($<text>0, "static void");	
-	strcpy($<text>$, "/*This is an entry point for the application.\n * @param args the arguments for main function\n */\n main(String[] args)\n");
+	strcpy($<text>$, "/*This is an entry point for the application.\n * @param args the arguments for main function\n */main(String[] args)");
  }
  else{	
-	char* javadoc = generateJavadoc($<text>0, $<text>1, NULL);	 
- 	strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+	char* javadoc = generateJavadoc($<text>0, $<text>1, NULL);
+	$<text>$ = malloc(strlen($<text>1) + strlen(javadoc) + 10);	 
+ 	strcpy($<text>$, javadoc);
  	strcat($<text>$, $<text>1);		 
  	strcat($<text>$, "()");
 	free(javadoc);
@@ -777,8 +780,8 @@ Declarator2
   | Declarator2 '(' ParameterTypeList ')' 
 {
  char* javadoc = generateJavadoc($<text>0, $<text>1, $<text>3);	
- $<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 150);			 
- strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+ $<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + strlen(javadoc) + 5);			 
+ strcpy($<text>$, javadoc);
  strcat($<text>$, $<text>1);		 
  strcat($<text>$, "( ");
  strcat($<text>$, $<text>3);
@@ -788,14 +791,14 @@ Declarator2
   | Declarator2 '(' ParameterIdentifierList ')'
 {
  char* javadoc = generateJavadoc($<text>0, $<text>1, $<text>3);	
- $<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 150);			 
- strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+ $<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + strlen(javadoc) + 5);			 
+ strcpy($<text>$, javadoc);
  strcat($<text>$, $<text>1);		 
  strcat($<text>$, "( ");
  strcat($<text>$, $<text>3);
  strcat($<text>$, " )");
- free($<text>1); free($<text>2); free(javadoc);
-} 
+ free($<text>1); free($<text>3); free(javadoc);
+}
  ;
 
 
@@ -1214,7 +1217,7 @@ FunctionDefinition
 {
  char* javadoc;
  char* newDeclarator = extractJavadoc($<text>2, &javadoc); 
- printf("%s\n%s %s %s ", javadoc, $<text>1, newDeclarator, $<text>3);
+ printf("%s\n%s %s\n%s ", javadoc, $<text>1, newDeclarator, $<text>3);
  free($<text>1); free($<text>2); free($<text>3); free(javadoc); free(newDeclarator);
 } 
   ;
@@ -1318,21 +1321,26 @@ char* extractJavadoc(char* source, char** javadoc)
 	(*javadoc)[javaDocSize] = '\0';
 	int remainingSize = strlen(javaDocEnd + 2) + 1;
 	char* remainings = malloc(remainingSize);
-	strcpy(remainings, javaDocEnd + 4);
+	strcpy(remainings, javaDocEnd + 2);
 	return remainings;
 }
 
 char* generateJavadoc(char* Type, char* Declarator, char* ArgumentList){
-	int javaDocAproxSize = strlen(Type) + strlen(Declarator) + 60;
+	int javaDocAproxSize = strlen(Type) + strlen(Declarator) + 70;
 	char* a = ArgumentList;	
 	if(ArgumentList != NULL)
 	{
 		int numArguments = 0;
 		while( a != NULL){
-			a = strstr(a, "'");
-			numArguments ++;
+			a = strstr(a, ",");
+			if(a != NULL)
+			{
+				a++;
+			}
+			numArguments++;
+			
 		}
-		javaDocAproxSize += strlen(ArgumentList) + numArguments * 40;
+		javaDocAproxSize += strlen(ArgumentList) + numArguments * 50;
 	}
 	    
 	char* javadoc = malloc(javaDocAproxSize);
@@ -1372,8 +1380,9 @@ char* generateJavadoc(char* Type, char* Declarator, char* ArgumentList){
 		strcat(javadoc, Type);
 		strcat(javadoc, " value\n");
 	}
-	strcat(javadoc, " * /");
-	//printf("\n\n===============\n%s\n================\n\n", javadoc);	
+	strcat(javadoc, " */");
+	//printf("\n\n===============\n%s\n================\n\n", javadoc);
+	
 	return javadoc;
 }
 

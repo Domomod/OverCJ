@@ -1,8 +1,8 @@
-void class () {     
+int foo (int x, int y, int z) {     
 	puts ("Repeat me"); 
 }
 
-int foo (int x, int y, int z) {     
+void class () {     
 	puts ("Repeat me"); 
 }
 

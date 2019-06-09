@@ -1,0 +1,36 @@
+#include <stdio.h> 
+int main () {     
+int i;     
+int j = 0, k = 0; 
+puts ("I love Formal Languages and Compilers");   
+/* This is a for loop */     
+for (i = 0; i < 10; i++) {         
+puts("Repeat me ten times");      
+}
+
+for (; i < 10; i++) {         
+puts("Repeat me ten times");      
+}
+
+for (i = 0;; i++) {         
+puts("Repeat me ten times");      
+}
+
+for (i = 0; i < 10;) {         
+puts("Repeat me ten times");      
+}
+
+for (; ; i++) {         
+puts("Repeat me ten times");      
+}
+
+for (i = 0; ; ) {         
+puts("Repeat me ten times");      
+}
+
+for (;;) {         
+puts("Repeat me ten times");      
+}
+
+return 0;
+}

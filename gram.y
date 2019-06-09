@@ -3,6 +3,7 @@
   void yyerror(const char *,...);
   void printMain();
   char* addIndentation(char *dest, unsigned int i);
+  char* constructForLoop(char* var, char* cond, char* acc, char* statement);
   int yyparse(void);
   extern int yylineno;
 #include <stdio.h>
@@ -75,7 +76,13 @@ strcat($<text>$,"()");
 free($<text>1);
 }
   | PostfixExpr '(' ArgumentExprList ')' 
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);	 		  
+{	 		  
+if(strcmp($<text>1, "puts") == 0){
+	free($<text>1);
+	$<text>1 = malloc(20);
+	strcpy($<text>1, "System.out.println");
+}
+$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);
 strcpy($<text>$,$<text>1);		  
 strcat($<text>$,"("); 		  
 strcat($<text>$,$<text>3);  
@@ -445,6 +452,8 @@ ConstantExpr
 {$<text>$ = $<text>1;
 }
   ;
+
+
 Declaration
   : DeclarationSpecifiers ';'
 {$<text>$ = malloc(strlen($<text>1) + 3);
@@ -685,7 +694,10 @@ Enumerator
 
 Declarator
   : Declarator2 
-{$<text>$ = $<text>1;
+{$<text>$ = malloc(strlen($<text>1) + 2);
+ strcpy($<text>$, "$"); 
+ strcat($<text>$, $<text>1);
+ free($<text>1); 
 }
   | Pointer Declarator2
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
@@ -1001,7 +1013,7 @@ CompoundStatement
 {$<text>$ = malloc(strlen($<text>2) + 6);
  strcpy($<text>$,"{\n");
  strcat($<text>$, $<text>2);
- strcat($<text>$, "\n}\n");
+ strcat($<text>$, "}\n");
  free($<text>2);
 }
   | '{' DeclarationList '}'
@@ -1017,7 +1029,7 @@ CompoundStatement
  strcat($<text>$, $<text>2);
  strcat($<text>$, "\n");
  strcat($<text>$, $<text>3);
- strcat($<text>$, "\n}\n");
+ strcat($<text>$, "}\n");
  free($<text>2); free($<text>3);
 }
   ;
@@ -1071,13 +1083,37 @@ IterationStatement
   : KWD_while '(' Expr ')' Statement
   | KWD_do Statement KWD_while '(' Expr ')' ';'
   | KWD_for '(' ';' ';' ')' Statement
+{$<text>$ = constructForLoop(NULL, NULL, NULL, $<text>6);
+ free($<text>6);
+}
   | KWD_for '(' ';' ';' Expr ')' Statement
+{$<text>$ = constructForLoop(NULL, NULL, $<text>5, $<text>7);
+ free($<text>5); free($<text>7);
+}
   | KWD_for '(' ';' Expr ';' ')' Statement
+{$<text>$ = constructForLoop(NULL, $<text>4, NULL, $<text>7);
+ free($<text>4); free($<text>7);
+}
   | KWD_for '(' ';' Expr ';' Expr ')' Statement
+{$<text>$ = constructForLoop(NULL, $<text>4, $<text>6, $<text>8);
+ free($<text>4); free($<text>6); free($<text>8);
+}
   | KWD_for '(' Expr ';' ';' ')' Statement
+{$<text>$ = constructForLoop($<text>3, NULL, NULL, $<text>7);
+ free($<text>3); free($<text>7);
+}
   | KWD_for '(' Expr ';' ';' Expr ')' Statement
+{$<text>$ = constructForLoop($<text>3, NULL, $<text>6, $<text>8);
+ free($<text>3); free($<text>6); free($<text>8);
+}
   | KWD_for '(' Expr ';' Expr ';' ')' Statement
+{$<text>$ = constructForLoop($<text>3, $<text>5, NULL, $<text>8);
+ free($<text>3); free($<text>5); free($<text>8);
+}
   | KWD_for '(' Expr ';' Expr ';' Expr ')' Statement
+{$<text>$ = constructForLoop($<text>3, $<text>5, $<text>7, $<text>9);
+ free($<text>3); free($<text>5); free($<text>7); free($<text>9);
+}
   ;
 JumpStatement
   : KWD_goto IDENT ';'
@@ -1116,8 +1152,7 @@ ExternalDefinition
 FunctionDefinition
   : {yyerror("syntax error");} Declarator FunctionBody
   | DeclarationSpecifiers Declarator FunctionBody
-{if (strcmp("main()", $<text>2) == 0) printMain();
- $<text>3 = addIndentation($<text>3, 1);
+{if (strcmp("$main()", $<text>2) == 0) printMain();
  printf("%s", $<text>3);
 } 
   ;
@@ -1165,6 +1200,46 @@ char* addIndentation(char *dest, unsigned int i){
    strcat(indentation, dest);
    free(dest);
    return indentation;
+}
+
+char* constructForLoop(char* var, char* cond, char* acc, char* statement){
+ int size = 40;
+ if(var != NULL)
+ 	size+= strlen(var);
+ if(cond != NULL)
+ 	size+= strlen(cond);
+ if(acc != NULL)
+ 	size+= strlen(acc);
+ if(statement != NULL)
+ 	size+= strlen(statement);
+
+ char* forLoop = malloc(size);
+
+ strcpy(forLoop,"for (");
+ if(var != NULL)
+ {
+	strcat(forLoop, var);
+ }
+ strcat(forLoop, "; ");
+ if(cond != NULL) 
+ {
+	strcat(forLoop, cond);
+ }
+ strcat(forLoop, "; ");
+ if(acc != NULL) 
+ {
+	strcat(forLoop, acc);
+ }
+ strcat(forLoop, ")\n"); 
+ char* hasBrackets = strstr(statement, "{"); 
+ if(statement != NULL)
+ {
+	 if(hasBrackets == NULL) strcat(forLoop, "{\n");
+	 strcat(forLoop, statement);
+	 if(hasBrackets == NULL) strcat(forLoop, "}\n");
+ }
+
+ return forLoop; 
 }
 
 int main() { return yyparse(); }

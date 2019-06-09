@@ -5,7 +5,11 @@
   #include "y.tab.h"
 %}
 %s Comment
+%s Comment2
 %%
+<INITIAL>"//"                                   { BEGIN Comment2; }
+<Comment2>\n					{ BEGIN INITIAL; }
+<Comment2>.|\n 					{ ; }
 <INITIAL>"/*"                                   { BEGIN Comment; }
 <Comment>"*/"                                   { BEGIN INITIAL; }
 <Comment>.|\n                                   { ; }
@@ -165,5 +169,6 @@
                                                 }
 <INITIAL>[ \t\v\n\f]                            { ; }
 <INITIAL>[ \t\v\n\f]*#include[ \t\v\n\f]*<[a-zA-Z_.0-9]+> { ; }
+<INITIAL>\\[^\n]*\n				{ ; }
 %%
 int yywrap(void) { return 1; }

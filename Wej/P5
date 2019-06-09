@@ -1,0 +1,10 @@
+int main () 
+{     
+	int i;     
+	/* This is a for loop */     
+	for (i = 0; i < 10; i++)     
+	{         
+		class ();     
+	}     
+	func (); 
+} 

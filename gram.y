@@ -1081,7 +1081,22 @@ SelectionStatement
   ;
 IterationStatement
   : KWD_while '(' Expr ')' Statement
+{ $<text>$ = malloc(strlen($<text>3) + strlen($<text>5) + 40);
+  strcpy($<text>$, "while (");
+  strcat($<text>$, $<text>3);
+  strcat($<text>$, ")\n");
+  strcat($<text>$, $<text>5);
+  free($<text>3); free($<text>5);  
+}
   | KWD_do Statement KWD_while '(' Expr ')' ';'
+{ $<text>$ = malloc(strlen($<text>2) + strlen($<text>5) + 40);
+  strcpy($<text>$, "do\n");
+  strcat($<text>$, $<text>2);
+  strcat($<text>$, " while ( ");
+  strcat($<text>$, $<text>5);
+  strcat($<text>$, " );\n");
+  free($<text>2); free($<text>5);  
+}
   | KWD_for '(' ';' ';' ')' Statement
 {$<text>$ = constructForLoop(NULL, NULL, NULL, $<text>6);
  free($<text>6);
@@ -1152,8 +1167,12 @@ ExternalDefinition
 FunctionDefinition
   : {yyerror("syntax error");} Declarator FunctionBody
   | DeclarationSpecifiers Declarator FunctionBody
-{if (strcmp("$main()", $<text>2) == 0) printMain();
- printf("%s", $<text>3);
+{if (strcmp("$main()", $<text>2) == 0){
+ printMain();
+ printf("{\nDefaultClass ref = new DefaultClass();");
+ printf("%s", $<text>3 + 2);
+}
+ printf("%s %s %s", $<text>1, $<text>2, $<text>3);
 } 
   ;
 FunctionBody

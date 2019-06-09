@@ -4,6 +4,8 @@
   void printMain();
   char* addIndentation(char *dest, unsigned int i);
   char* constructForLoop(char* var, char* cond, char* acc, char* statement);
+  char* extractJavadoc(char* source, char** javadoc);
+  char* generateJavadoc(char* Type, char* Declarator, char* ArgumentList);
   int yyparse(void);
   extern int yylineno;
 #include <stdio.h>
@@ -42,7 +44,9 @@ Input
 
 PrimaryExpr
   : IDENT		
-{$<text>$ = $<text>1;
+{$<text>$ = malloc(strlen($<text>1) + 2);
+ strcpy($<text>$,$<text>1);
+ free($<text>1);
 }
   | Constant		
 {$<text>$ = $<text>1;
@@ -71,16 +75,20 @@ free($<text>1); free($<text>3);
 }
   | PostfixExpr '(' ')'		
 {$<text>$ = malloc(strlen($<text>1) + 3);	 	
-strcpy($<text>$,$<text>1);	
+strcpy($<text>$,"ref.");
+strcat($<text>$,$<text>1);	
 strcat($<text>$,"()");
-free($<text>1);
+free($<text>1); 
 }
   | PostfixExpr '(' ArgumentExprList ')' 
 {	 		  
-if(strcmp($<text>1, "puts") == 0){
+if(strcmp($<text>1, "$puts") == 0){
 	free($<text>1);
 	$<text>1 = malloc(20);
 	strcpy($<text>1, "System.out.println");
+}
+else{
+	strcpy($<text>$,"ref.");
 }
 $<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);
 strcpy($<text>$,$<text>1);		  
@@ -149,8 +157,9 @@ UnaryExpr
  free($<text>1); 
 }
   | UnaryOperator CastExpr
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -477,8 +486,9 @@ DeclarationSpecifiers
 {$<text>$ = $<text>1;
 }
   | StorageClassSpecifier DeclarationSpecifiers
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -486,8 +496,9 @@ DeclarationSpecifiers
 {$<text>$ = $<text>1;
 }
   | TypeSpecifier DeclarationSpecifiers
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -530,17 +541,17 @@ StorageClassSpecifier
 
 
 TypeSpecifier
-  : KWD_char 			{$<text>$ = malloc(5); strcpy($<text>$, "char");}
-  | KWD_short 			{$<text>$ = malloc(6); strcpy($<text>$, "short");}
-  | KWD_int   			{$<text>$ = malloc(4); strcpy($<text>$, "int");}
-  | KWD_long  			{$<text>$ = malloc(5); strcpy($<text>$, "long");}
-  | KWD_signed  		{$<text>$ = malloc(7); strcpy($<text>$, "signed");}
+  : KWD_char 			{$<text>$ = malloc(10); strcpy($<text>$, "char");}
+  | KWD_short 			{$<text>$ = malloc(10); strcpy($<text>$, "short");}
+  | KWD_int   			{$<text>$ = malloc(10); strcpy($<text>$, "int");}
+  | KWD_long  			{$<text>$ = malloc(10); strcpy($<text>$, "long");}
+  | KWD_signed  		{$<text>$ = malloc(19); strcpy($<text>$, "signed");}
   | KWD_unsigned 		{$<text>$ = malloc(13); strcpy($<text>$, "unsigned");}
-  | KWD_float 			{$<text>$ = malloc(6); strcpy($<text>$, "float");}
-  | KWD_double 			{$<text>$ = malloc(7); strcpy($<text>$, "double");}
-  | KWD_const 			{$<text>$ = malloc(6); strcpy($<text>$, "const");}
-  | KWD_volatile 		{$<text>$ = malloc(9); strcpy($<text>$, "volatile");}
-  | KWD_void 			{$<text>$ = malloc(5); strcpy($<text>$, "void");}
+  | KWD_float 			{$<text>$ = malloc(10); strcpy($<text>$, "float");}
+  | KWD_double 			{$<text>$ = malloc(10); strcpy($<text>$, "double");}
+  | KWD_const 			{$<text>$ = malloc(10); strcpy($<text>$, "const");}
+  | KWD_volatile 		{$<text>$ = malloc(10); strcpy($<text>$, "volatile");}
+  | KWD_void 			{$<text>$ = malloc(10); strcpy($<text>$, "void");}
   | StructOrUnionSpecifier 	{$<text>$ = $<text>1;}
   | EnumSpecifier		{$<text>$ = $<text>1;}
   | TYPE_NAME			{yyerror("Jednak czasem to sie odpala ");}
@@ -566,8 +577,9 @@ StructOrUnionSpecifier
  free($<text>1);  free($<text>3);
 }
   | StructOrUnion IDENT
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -585,8 +597,9 @@ StructDeclarationList
 {$<text>$ = $<text>1;
 }
   | StructDeclarationList StructDeclaration
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -595,8 +608,9 @@ StructDeclarationList
 
 StructDeclaration
   : TypeSpecifierList StructDeclaratorList ';'
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 3);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 4);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  strcat($<text>$, ";\n");
  free($<text>1);  free($<text>2); 
@@ -694,15 +708,24 @@ Enumerator
 
 Declarator
   : Declarator2 
-{$<text>$ = malloc(strlen($<text>1) + 2);
- strcpy($<text>$, "$"); 
- strcat($<text>$, $<text>1);
+{$<text>$ = malloc(strlen($<text>1) + 2); 
+ strcpy($<text>$, $<text>1);
  free($<text>1); 
 }
   | Pointer Declarator2
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
- strcpy($<text>$, $<text>1); 
- strcat($<text>$, $<text>2);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
+ if(strcmp($<text>0, "char") == 0)
+ {
+	free($<text>0);
+	$<text>0 = malloc(10);
+	strcpy($<text>0, "String");
+ }
+ else
+ {
+	strcpy($<text>$, $<text>1); 
+	strcat($<text>$, " ");
+ } 
+ strcat($<text>$, $<text>2); 
  free($<text>1);  free($<text>2); 
 }
   ;
@@ -731,29 +754,47 @@ Declarator2
  strcat($<text>$, "[ ");
  strcat($<text>$, $<text>3);
  strcat($<text>$, " ]");
- free($<text>1); free($<text>2);
+ free($<text>1); free($<text>3);
 }
   | Declarator2 '(' ')' 
-{$<text>$ = malloc(sizeof($<text>1) + 2);			 
- strcpy($<text>$, $<text>1);		 
- strcat($<text>$, "()");			 
+{$<text>$ = malloc(sizeof($<text>1) + 150);
+ if (strcmp("$main", $<text>1) == 0)
+ {	free($<text>0);
+	$<text>0 = malloc(15);
+	strcpy($<text>0, "static void");	
+	strcpy($<text>$, "/*This is an entry point for the application.\n * @param args the arguments for main function\n */\n main(String[] args)\n");
+ }
+ else{	
+	char* javadoc = generateJavadoc($<text>0, $<text>1, NULL);	 
+ 	strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+ 	strcat($<text>$, $<text>1);		 
+ 	strcat($<text>$, "()");
+	free(javadoc);
+ }
+			 
  free($<text>1);
 }
   | Declarator2 '(' ParameterTypeList ')' 
-{$<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 5);			 
- strcpy($<text>$, $<text>1);		 
+{
+ char* javadoc = generateJavadoc($<text>0, $<text>1, $<text>3);	
+ $<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 150);			 
+ strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+ strcat($<text>$, $<text>1);		 
  strcat($<text>$, "( ");
  strcat($<text>$, $<text>3);
  strcat($<text>$, " )");
- free($<text>1); free($<text>2);
+ free($<text>1); free($<text>3); free(javadoc);
 }
   | Declarator2 '(' ParameterIdentifierList ')'
-{$<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 5);			 
- strcpy($<text>$, $<text>1);		 
+{
+ char* javadoc = generateJavadoc($<text>0, $<text>1, $<text>3);	
+ $<text>$ = malloc(sizeof($<text>1) + sizeof($<text>3) + 150);			 
+ strcpy($<text>$, "/*This method is generated from func1()*/\n ");
+ strcat($<text>$, $<text>1);		 
  strcat($<text>$, "( ");
  strcat($<text>$, $<text>3);
  strcat($<text>$, " )");
- free($<text>1); free($<text>2);
+ free($<text>1); free($<text>2); free(javadoc);
 } 
  ;
 
@@ -761,7 +802,7 @@ Declarator2
 Pointer
   : '*' 
 {$<text>$ = malloc(2); 
- strcpy($<text>$, "*");
+ strcpy($<text>$, "*"); 
 }
   | '*' TypeSpecifierList
 {$<text>$ = malloc(strlen($<text>2) + 2); 
@@ -811,9 +852,9 @@ IdentifierList
 {$<text>$ = $<text>1;
 }
   | IdentifierList ',' IDENT
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 2);	     
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);	     
  strcpy($<text>$, $<text>1);	     
- strcat($<text>$, ",");	     
+ strcat($<text>$, ", ");	     
  strcat($<text>$, $<text>3);	     
  free($<text>1); free($<text>3); 
 }
@@ -834,17 +875,18 @@ ParameterList
 {$<text>$ = $<text>1;
 }
   | ParameterList ',' ParameterDeclaration
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 2);	     
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 3);	     
  strcpy($<text>$, $<text>1);	     
- strcat($<text>$, ",");	     
+ strcat($<text>$, ", ");	     
  strcat($<text>$, $<text>3);	     
  free($<text>1); free($<text>3); 
 }
   ;
 ParameterDeclaration
   : TypeSpecifierList Declarator
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -857,8 +899,9 @@ TypeName
 {$<text>$ = $<text>1;
 }
   | TypeSpecifierList AbstractDeclarator
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -871,8 +914,9 @@ AbstractDeclarator
 {$<text>$ = $<text>1;
 }
   | Pointer AbstractDeclarator2
-{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 1);
+{$<text>$ = malloc(strlen($<text>1) + strlen($<text>2) + 2);
  strcpy($<text>$, $<text>1); 
+ strcat($<text>$, " ");
  strcat($<text>$, $<text>2);
  free($<text>1);  free($<text>2); 
 }
@@ -927,7 +971,7 @@ AbstractDeclarator2
 {$<text>$ = malloc(strlen($<text>1) + 3);
  strcpy($<text>$, $<text>1);
  strcat($<text>$, "()");
- free($<text>1);
+ free($<text>1); 
 }
   | AbstractDeclarator2 '(' ParameterTypeList ')'
 {$<text>$ = malloc(strlen($<text>1) + strlen($<text>3) + 5);
@@ -935,7 +979,7 @@ AbstractDeclarator2
  strcat($<text>$, "( ");
  strcat($<text>$, $<text>3);
  strcat($<text>$, " )");
- free($<text>1); free($<text>3);
+ free($<text>1); free($<text>3); 
 }
   ;
 
@@ -1167,12 +1211,11 @@ ExternalDefinition
 FunctionDefinition
   : {yyerror("syntax error");} Declarator FunctionBody
   | DeclarationSpecifiers Declarator FunctionBody
-{if (strcmp("$main()", $<text>2) == 0){
- printMain();
- printf("{\nDefaultClass ref = new DefaultClass();");
- printf("%s", $<text>3 + 2);
-}
- printf("%s %s %s", $<text>1, $<text>2, $<text>3);
+{
+ char* javadoc;
+ char* newDeclarator = extractJavadoc($<text>2, &javadoc); 
+ printf("%s\n%s %s %s ", javadoc, $<text>1, newDeclarator, $<text>3);
+ free($<text>1); free($<text>2); free($<text>3); free(javadoc); free(newDeclarator);
 } 
   ;
 FunctionBody
@@ -1210,7 +1253,8 @@ void printMain(const char* fBody)
   printf("public static void main(String[] args)\n");	
 }
 
-char* addIndentation(char *dest, unsigned int i){
+char* addIndentation(char *dest, unsigned int i)
+{
     char* indentation = malloc(i + 1 + strlen(dest));
     strcpy(indentation, "\t");
     for(int x = 1; x < i; x++){
@@ -1221,7 +1265,9 @@ char* addIndentation(char *dest, unsigned int i){
    return indentation;
 }
 
-char* constructForLoop(char* var, char* cond, char* acc, char* statement){
+
+char* constructForLoop(char* var, char* cond, char* acc, char* statement)
+{
  int size = 40;
  if(var != NULL)
  	size+= strlen(var);
@@ -1259,6 +1305,76 @@ char* constructForLoop(char* var, char* cond, char* acc, char* statement){
  }
 
  return forLoop; 
+}
+
+
+char* extractJavadoc(char* source, char** javadoc)
+{
+	char* javaDocStart = strstr(source, "/*");
+	char* javaDocEnd   = strstr(source, "*/");
+	int javaDocSize = javaDocEnd + 2 - javaDocStart;
+	*javadoc = malloc(javaDocSize + 2);
+	strncpy(*javadoc, javaDocStart, javaDocSize);
+	(*javadoc)[javaDocSize] = '\0';
+	int remainingSize = strlen(javaDocEnd + 2) + 1;
+	char* remainings = malloc(remainingSize);
+	strcpy(remainings, javaDocEnd + 4);
+	return remainings;
+}
+
+char* generateJavadoc(char* Type, char* Declarator, char* ArgumentList){
+	int javaDocAproxSize = strlen(Type) + strlen(Declarator) + 60;
+	char* a = ArgumentList;	
+	if(ArgumentList != NULL)
+	{
+		int numArguments = 0;
+		while( a != NULL){
+			a = strstr(a, "'");
+			numArguments ++;
+		}
+		javaDocAproxSize += strlen(ArgumentList) + numArguments * 40;
+	}
+	    
+	char* javadoc = malloc(javaDocAproxSize);
+	strcpy(javadoc, "/**\n * This method is generated from ");
+	strcat(javadoc, Declarator + 1);
+	strcat(javadoc, "()\n");
+	
+	if(ArgumentList != NULL)
+	{
+		char* tempArgList = strdup(ArgumentList);
+		a = tempArgList;
+		char* argumentStart = a;		
+		char* argument;	
+		while( a != NULL)
+		{
+			a = strstr(a, ",");
+			if(a != NULL)
+			{
+				a[0] = '\0';
+				a += 2;
+			}	
+			argument = malloc(strlen(argumentStart) + 1);	
+			strcpy(argument, argumentStart);
+			strcat(javadoc, " * @param ");
+			strcat(javadoc, argument);
+			strcat(javadoc, " is a translation of formal parameter ");
+			strcat(javadoc, strstr(argument, " ") + 2 );
+			strcat(javadoc, "\n");
+			free(argument);	
+			argumentStart = a;	
+		}
+	}
+	/*Not strcmp, because "static void" main.*/
+	if(strstr(Type, "void") == NULL)
+	{
+		strcat(javadoc, " * return some ");
+		strcat(javadoc, Type);
+		strcat(javadoc, " value\n");
+	}
+	strcat(javadoc, " * /");
+	//printf("\n\n===============\n%s\n================\n\n", javadoc);	
+	return javadoc;
 }
 
 int main() { return yyparse(); }

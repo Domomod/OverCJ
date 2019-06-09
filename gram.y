@@ -30,10 +30,10 @@
 
 %token CONST_INT CONST_LONG_INT CONST_UNSIGNED CONST_UNSIGNED_LONG_INT CONST_DOUBLE CONST_FLOAT CONST_LONG_DOUBLE CONST_STRING CONST_CHAR
 
-%token IDENT TYPE_NAME
+%token IDENT TYPE_NAME JAVA_DOC
 %%
 Wrapper
-  : {printf("public class DefaultClass\n{\n");} Input {printf("}\n");};
+  : JAVA_DOC {printf("%s\npublic class DefaultClass\n{\n", $<text>1);} Input {printf("}\n");};
   
 
 Input

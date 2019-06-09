@@ -4,173 +4,181 @@
   int yylex(void);
   #include "y.tab.h"
 %}
+%s Javadoc
+%s Code
 %s Comment
 %s Comment2
 %%
-<INITIAL>"//"                                   { BEGIN Comment2; }
-<Comment2>\n					{ BEGIN INITIAL; }
-<Comment2>.|\n 					{ ; }
-<INITIAL>"/*"                                   { BEGIN Comment; }
-<Comment>"*/"                                   { BEGIN INITIAL; }
-<Comment>.|\n                                   { ; }
-<INITIAL>auto                                   { return KWD_auto; }
-<INITIAL>break                                  { return KWD_break; }
-<INITIAL>case                                   { return KWD_case; }
-<INITIAL>char                                   { return KWD_char; }
-<INITIAL>const                                  { return KWD_const; }
-<INITIAL>continue                               { return KWD_continue; }
-<INITIAL>default                                { return KWD_default; }
-<INITIAL>do                                     { return KWD_do; }
-<INITIAL>double                                 { return KWD_double; }
-<INITIAL>else                                   { return KWD_else; }
-<INITIAL>enum                                   { return KWD_enum; }
-<INITIAL>extern                                 { return KWD_extern; }
-<INITIAL>float                                  { return KWD_float; }
-<INITIAL>for                                    { return KWD_for; }
-<INITIAL>goto                                   { return KWD_goto; }
-<INITIAL>if                                     { return KWD_if; }
-<INITIAL>int                                    { return KWD_int; }
-<INITIAL>long                                   { return KWD_long; }
-<INITIAL>register                               { return KWD_register; }
-<INITIAL>return                                 { return KWD_return; }
-<INITIAL>short                                  { return KWD_short; }
-<INITIAL>signed                                 { return KWD_signed; }
-<INITIAL>sizeof                                 { return KWD_sizeof; }
-<INITIAL>static                                 { return KWD_static; }
-<INITIAL>struct                                 { return KWD_struct; }
-<INITIAL>switch                                 { return KWD_switch; }
-<INITIAL>typedef                                { return KWD_typedef; }
-<INITIAL>union                                  { return KWD_union; }
-<INITIAL>unsigned                               { return KWD_unsigned; }
-<INITIAL>void                                   { return KWD_void; }
-<INITIAL>volatile                               { return KWD_volatile; }
-<INITIAL>while                                  { return KWD_while; }
-<INITIAL>">>="                                  { return OP_SHR_ASSIGN; }
-<INITIAL>"<<="                                  { return OP_SHL_ASSIGN; }
-<INITIAL>"+="                                   { return OP_ADD_ASSIGN; }
-<INITIAL>"-="                                   { return OP_SUB_ASSIGN; }
-<INITIAL>"*="                                   { return OP_MUL_ASSIGN; }
-<INITIAL>"/="                                   { return OP_DIV_ASSIGN; }
-<INITIAL>"%="                                   { return OP_MOD_ASSIGN; }
-<INITIAL>"&="                                   { return OP_AND_ASSIGN; }
-<INITIAL>"^="                                   { return OP_XOR_ASSIGN; }
-<INITIAL>"|="                                   { return OP_OR_ASSIGN; }
-<INITIAL>">>"                                   { return OP_SHR; }
-<INITIAL>"<<"                                   { return OP_SHL; }
-<INITIAL>"++"                                   { return OP_INC; }
-<INITIAL>"--"                                   { return OP_DEC; }
-<INITIAL>"->"                                   { return OP_PTR; }
-<INITIAL>"&&"                                   { return OP_AND; }
-<INITIAL>"||"                                   { return OP_OR; }
-<INITIAL>"<="                                   { return OP_LE; }
-<INITIAL>">="                                   { return OP_GE; }
-<INITIAL>"=="                                   { return OP_EQ; }
-<INITIAL>"!="                                   { return OP_NE; }
-<INITIAL>"..."                                  { return OP_ELIPSIS; }
-<INITIAL>\;                                     { return ';'; }
-<INITIAL>\{                                     { return '{'; }
-<INITIAL>\}                                     { return '}'; }
-<INITIAL>\,                                     { return ','; }
-<INITIAL>\:                                     { return ':'; }
-<INITIAL>\=                                     { return '='; }
-<INITIAL>\(                                     { return '('; }
-<INITIAL>\)                                     { return ')'; }
-<INITIAL>\[                                     { return '['; }
-<INITIAL>\]                                     { return ']'; }
-<INITIAL>\.                                     { return '.'; }
-<INITIAL>\&                                     { return '&'; }
-<INITIAL>\!                                     { return '!'; }
-<INITIAL>\~                                     { return '~'; }
-<INITIAL>\+                                     { return '+'; }
-<INITIAL>\-                                     { return '-'; }
-<INITIAL>\*                                     { return '*'; }
-<INITIAL>\/                                     { return '/'; }
-<INITIAL>\%                                     { return '%'; }
-<INITIAL>\<                                     { return '<'; }
-<INITIAL>\>                                     { return '>'; }
-<INITIAL>\^                                     { return '^'; }
-<INITIAL>\|                                     { return '|'; }
-<INITIAL>\?                                     { return '?'; }
-<INITIAL>[+\-]?[0-9]+                           { 
+<INITIAL>"/*"                                { BEGIN Javadoc; }
+<Javadoc>[^\*]*"*/"                          { BEGIN Code;
+					       yylval.text = malloc(strlen(yytext) + 30);
+					       strcpy(yylval.text, "/* ");
+					       strcat(yylval.text, yytext);
+                                               return JAVA_DOC; /* typedef -> check type */ }
+<Code>"//"                                   { BEGIN Comment2; }
+<Comment2>\n				     { BEGIN Code; }
+<Comment2>.|\n 				     { ; }
+<Code>"/*"                                   { BEGIN Comment; }
+<Comment>"*/"                                { BEGIN Code; }
+<Comment>.|\n                                { ; }
+<Code>auto                                   { return KWD_auto; }
+<Code>break                                  { return KWD_break; }
+<Code>case                                   { return KWD_case; }
+<Code>char                                   { return KWD_char; }
+<Code>const                                  { return KWD_const; }
+<Code>continue                               { return KWD_continue; }
+<Code>default                                { return KWD_default; }
+<Code>do                                     { return KWD_do; }
+<Code>double                                 { return KWD_double; }
+<Code>else                                   { return KWD_else; }
+<Code>enum                                   { return KWD_enum; }
+<Code>extern                                 { return KWD_extern; }
+<Code>float                                  { return KWD_float; }
+<Code>for                                    { return KWD_for; }
+<Code>goto                                   { return KWD_goto; }
+<Code>if                                     { return KWD_if; }
+<Code>int                                    { return KWD_int; }
+<Code>long                                   { return KWD_long; }
+<Code>register                               { return KWD_register; }
+<Code>return                                 { return KWD_return; }
+<Code>short                                  { return KWD_short; }
+<Code>signed                                 { return KWD_signed; }
+<Code>sizeof                                 { return KWD_sizeof; }
+<Code>static                                 { return KWD_static; }
+<Code>struct                                 { return KWD_struct; }
+<Code>switch                                 { return KWD_switch; }
+<Code>typedef                                { return KWD_typedef; }
+<Code>union                                  { return KWD_union; }
+<Code>unsigned                               { return KWD_unsigned; }
+<Code>void                                   { return KWD_void; }
+<Code>volatile                               { return KWD_volatile; }
+<Code>while                                  { return KWD_while; }
+<Code>">>="                                  { return OP_SHR_ASSIGN; }
+<Code>"<<="                                  { return OP_SHL_ASSIGN; }
+<Code>"+="                                   { return OP_ADD_ASSIGN; }
+<Code>"-="                                   { return OP_SUB_ASSIGN; }
+<Code>"*="                                   { return OP_MUL_ASSIGN; }
+<Code>"/="                                   { return OP_DIV_ASSIGN; }
+<Code>"%="                                   { return OP_MOD_ASSIGN; }
+<Code>"&="                                   { return OP_AND_ASSIGN; }
+<Code>"^="                                   { return OP_XOR_ASSIGN; }
+<Code>"|="                                   { return OP_OR_ASSIGN; }
+<Code>">>"                                   { return OP_SHR; }
+<Code>"<<"                                   { return OP_SHL; }
+<Code>"++"                                   { return OP_INC; }
+<Code>"--"                                   { return OP_DEC; }
+<Code>"->"                                   { return OP_PTR; }
+<Code>"&&"                                   { return OP_AND; }
+<Code>"||"                                   { return OP_OR; }
+<Code>"<="                                   { return OP_LE; }
+<Code>">="                                   { return OP_GE; }
+<Code>"=="                                   { return OP_EQ; }
+<Code>"!="                                   { return OP_NE; }
+<Code>"..."                                  { return OP_ELIPSIS; }
+<Code>\;                                     { return ';'; }
+<Code>\{                                     { return '{'; }
+<Code>\}                                     { return '}'; }
+<Code>\,                                     { return ','; }
+<Code>\:                                     { return ':'; }
+<Code>\=                                     { return '='; }
+<Code>\(                                     { return '('; }
+<Code>\)                                     { return ')'; }
+<Code>\[                                     { return '['; }
+<Code>\]                                     { return ']'; }
+<Code>\.                                     { return '.'; }
+<Code>\&                                     { return '&'; }
+<Code>\!                                     { return '!'; }
+<Code>\~                                     { return '~'; }
+<Code>\+                                     { return '+'; }
+<Code>\-                                     { return '-'; }
+<Code>\*                                     { return '*'; }
+<Code>\/                                     { return '/'; }
+<Code>\%                                     { return '%'; }
+<Code>\<                                     { return '<'; }
+<Code>\>                                     { return '>'; }
+<Code>\^                                     { return '^'; }
+<Code>\|                                     { return '|'; }
+<Code>\?                                     { return '?'; }
+<Code>[+\-]?[0-9]+                           { 
                                                   yylval.text = strdup(yytext);
                                                   return CONST_INT;
                                                 }
-<INITIAL>[+\-]?0[xX][0-9a-fA-F]+                {
+<Code>[+\-]?0[xX][0-9a-fA-F]+                {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_INT;
                                                 }
-<INITIAL>[+\-]?[0-9]+[lL]                       {
+<Code>[+\-]?[0-9]+[lL]                       {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_LONG_INT;
                                                 }
-<INITIAL>[+\-]?0[xX][0-9a-fA-F]+[lL]            { 
+<Code>[+\-]?0[xX][0-9a-fA-F]+[lL]            { 
                                                   yylval.text = strdup(yytext);
                                                   return CONST_LONG_INT;
                                                 }
-<INITIAL>\+?[0-9]+[uU]                          {
+<Code>\+?[0-9]+[uU]                          {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED;
                                                 }
-<INITIAL>\+?0[xX][0-9a-fA-F]+[uU]               {
+<Code>\+?0[xX][0-9a-fA-F]+[uU]               {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED;
                                                 }
-<INITIAL>\+?[0-9]+[uU][lL]                      {
+<Code>\+?[0-9]+[uU][lL]                      {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED_LONG_INT;
                                                 }
-<INITIAL>\+?[0-9]+[lL][uU]                      {
+<Code>\+?[0-9]+[lL][uU]                      {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED_LONG_INT;
                                                 }
-<INITIAL>\+?0[xX][0-9a-fA-F]+[uU][lL]           {
+<Code>\+?0[xX][0-9a-fA-F]+[uU][lL]           {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED_LONG_INT;
                                                 }
-<INITIAL>\+?0[xX][0-9a-fA-F]+[lL][uU]           {
+<Code>\+?0[xX][0-9a-fA-F]+[lL][uU]           {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_UNSIGNED_LONG_INT;
                                                 }
-<INITIAL>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?      {
+<Code>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?      {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_DOUBLE;
                                                 }
-<INITIAL>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?      {
+<Code>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?      {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_DOUBLE;
                                                 }
-<INITIAL>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?[fF]  {
+<Code>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?[fF]  {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_FLOAT;
                                                 }
-<INITIAL>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?[fF]  {
+<Code>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?[fF]  {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_FLOAT;
                                                 }
-<INITIAL>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?[lL]  {
+<Code>[0-9]*\.[0-9]+([Ee][+\-]?[0-9]+)?[lL]  {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_LONG_DOUBLE;
                                                 }
-<INITIAL>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?[lL]  {
+<Code>[0-9]+\.[0-9]*([Ee][+\-]?[0-9]+)?[lL]  {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_LONG_DOUBLE;
                                                 }
-<INITIAL>\"(\\.|[^\\"])*\"                      {
+<Code>\"(\\.|[^\\"])*\"                      {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_STRING;
                                                 }
-<INITIAL>'[0-9a-zA-Z]'|'\\n'|'\\t'|'\\v'        {
+<Code>'[0-9a-zA-Z]'|'\\n'|'\\t'|'\\v'        {
                                                   yylval.text = strdup(yytext);
                                                   return CONST_CHAR;
                                                 }
-<INITIAL>[a-zA-Z_][a-zA-Z_0-9]*                 {
+<Code>[a-zA-Z_][a-zA-Z_0-9]*                 {
                                                   yylval.text = malloc(strlen(yytext + 2));
 						  strcpy(yylval.text, "$");
 						  strcat(yylval.text, yytext);
                                                   return IDENT; /* typedef -> check type */
                                                 }
-<INITIAL>[ \t\v\n\f]                            { ; }
-<INITIAL>[ \t\v\n\f]*#include[ \t\v\n\f]*<[a-zA-Z_.0-9]+> { ; }
-<INITIAL>\\[^\n]*\n				{ ; }
+<Code>[ \t\v\n\f]                            { ; }
+<Code>[ \t\v\n\f]*#include[ \t\v\n\f]*<[a-zA-Z_.0-9]+> { ; }
+<Code>\\[^\n]*\n				{ ; }
 %%
 int yywrap(void) { return 1; }

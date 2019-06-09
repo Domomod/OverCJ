@@ -1,9 +1,7 @@
 /* #autor: John Doe     
-   #version: 0.0001 */ 
+   #version: 0.0001 */
+#define MY_DEF_1 125 
 #include <stdio.h> 
-#include 
-
-"Source/myLiv.h" 
 int func1 (int i) 
 {     
 	int j = 0;     

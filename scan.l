@@ -8,6 +8,8 @@
 	char* val;
   } DefinePair;
   DefinePair* defineRules;
+  int insertedRules = 0;
+  int RulesSize = 0;
 %}
 %s Javadoc
 %s Code
@@ -24,16 +26,49 @@
 					       strcat(yylval.text, yytext);
                                                return JAVA_DOC; /* typedef -> check type */ }
 
+<Code>#define	     			       { BEGIN Define; }
+<Define>[ \t\v\n\f]                            { ; }
+<Define>[a-zA-Z_0-9]+[ \t\v\n\f]+[a-zA-Z_0-9]+ { BEGIN Code; 
+						 char* iter = yytext; 
+						 while(*(iter) != ' ' &&  *(iter) != '\t' && *(iter) != '\v' && *(iter) != '\n' && *(iter) != '\f') 
+						{
+							iter++;
+						}
+						*iter = '\0';
+						char* key = malloc(strlen(yytext));
+						strcpy(key, yytext);				
+						iter++;			
+						while(*iter == ' ' ||  *(iter) == '\t' || *(iter) == '\v' || *(iter) == '\n' || *(iter) == '\f') 
+						{
+							iter++;
+						}
+						char *val = malloc(strlen(iter));
+						strcpy(val, iter);
+						if(insertedRules <= RulesSize)	
+						{
+							int NewRulesSize = RulesSize == 0 ? 10 : 2 * RulesSize;
+							DefinePair* biggerRules = malloc( NewRulesSize * sizeof(DefinePair) );
+							memcpy(biggerRules, defineRules, RulesSize * sizeof(DefinePair));
+							if(RulesSize != 0)
+							{
+								free(defineRules);						
+							}
+							defineRules = biggerRules;
+							RulesSize = NewRulesSize;						
+						}
+						defineRules[insertedRules].key = key;
+						defineRules[insertedRules].val = val;
+						insertedRules++;
+					     }	
+
+
 <Code>#include[ \t\v\n\f]*\"		     { BEGIN Include1; }
 <Include1>\" 				     { BEGIN Code; }
 <Include1>.|\n 				     { ; }
 
-<Code>#include[ \t\v\n\f]*<		     	     { BEGIN Include2; }
+<Code>#include[ \t\v\n\f]*<		     { BEGIN Include2; }
 <Include2>> 				     { BEGIN Code; }
 <Include2>.|\n 				     { ; }
-
-
-
 
 <Code>"//"                                   { BEGIN Comment2; }
 <Comment2>\n				     { BEGIN Code; }

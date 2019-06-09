@@ -1,0 +1,14 @@
+int main () 
+{     
+	int i;     
+	/* This is a for loop */     
+	for (i = 0; i < 10; i++)     
+	{         
+
+
+
+		puts ("I love Formal Languages and Compilers");
+		class ();     
+	}     
+	func (); 
+} 

@@ -164,7 +164,9 @@
                                                   return CONST_CHAR;
                                                 }
 <INITIAL>[a-zA-Z_][a-zA-Z_0-9]*                 {
-                                                  yylval.text = strdup(yytext);
+                                                  yylval.text = malloc(strlen(yytext + 2));
+						  strcpy(yylval.text, "$");
+						  strcat(yylval.text, yytext);
                                                   return IDENT; /* typedef -> check type */
                                                 }
 <INITIAL>[ \t\v\n\f]                            { ; }
